@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:orientation="vertical"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
   android:layout_width="match_parent"
-  android:layout_height="match_parent">
+  android:layout_height="match_parent"
+  android:orientation="vertical">
 
   <LinearLayout
     android:layout_width="match_parent"
@@ -10,26 +11,68 @@
     android:orientation="vertical">
 
     <EditText
+      android:id="@+id/startET"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:hint="Choose starting point"
-      android:id="@+id/startET"
-    />
+      android:hint="@string/hintStart"
+      android:maxLines="1"
+      />
 
     <EditText
+      android:id="@+id/destET"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:hint="Chose destination"
-      android:id="@+id/destET"
+      android:hint="@string/hintEnd"
+      android:maxLines="1"
       />
-    <Button
-      android:layout_width="164dp"
+
+    <LinearLayout
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:textAllCaps="false"
-      android:text="Find Path"
-      android:id="@+id/findPB"/>
+      android:orientation="horizontal"
+      >
+
+      <Button
+        android:id="@+id/findPB"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:text="Find Path"
+        android:textAllCaps="false"/>
+
+      <ImageView
+        android:id="@+id/distanceIV"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/distance"/>
+
+      <TextView
+        android:id="@+id/distanceTV"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:hint="0 km"/>
+
+      <ImageView
+        android:id="@+id/timeIV"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/time"/>
+
+      <TextView
+        android:id="@+id/timeTV"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:hint="0 min"/>
+
+
+    </LinearLayout>
 
   </LinearLayout>
+
   <fragment xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:map="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -37,5 +80,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:name="com.google.android.gms.maps.SupportMapFragment"
-    tools:context="mm.spp.MapsActivity"/>
+    tools:context="mm.spp.root.MapsActivity"/>
+
 </LinearLayout>
