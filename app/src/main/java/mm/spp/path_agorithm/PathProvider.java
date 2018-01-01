@@ -139,7 +139,7 @@ public class PathProvider {
           int timeS = 0; //in minutes
 
           for (int j = 0; j < legs.length(); j++) {
-            leg = legs.getJSONObject(i); // a portion of the route
+            leg = legs.getJSONObject(j); // a portion of the route
             legStartLocation = leg.getJSONObject("start_location");
             legEndLocation = leg.getJSONObject("end_location");
             distanceM += leg.getJSONObject("distance").getInt("value");
@@ -168,8 +168,8 @@ public class PathProvider {
 
           float timeM = formatFloat((float) timeS / 60);
           float distanceKM = formatFloat((float) distanceM / 1000);
-          Route routeDto = new Route(originAddress, destinationAddress, originLatLng,destinationLatLng, timeM,
-              distanceKM, coordinates);
+          Route routeDto = new Route(originAddress, destinationAddress, originLatLng,destinationLatLng, distanceKM,
+              timeM, coordinates);
           routes.add(routeDto);
         }
 

@@ -1,8 +1,8 @@
 package mm.spp.root;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.support.v4.app.ActivityCompat;
@@ -14,24 +14,25 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import mm.spp.R;
 import mm.spp.path_agorithm.PathProvider;
 import mm.spp.path_agorithm.Route;
@@ -40,12 +41,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
   private final int REQ_PERMISSION_CODE = 1;
   //project: rock-nebula-190414
-  private GoogleMap mMap;
+  //ui elements
   private Button findPathB;
-  private EditText startEd, destEd;
   private TextView distanceTV, timeTV;
-  private ImageView distanceIV, timeIV;
-  private PlaceAutocompleteFragment originPAF;
+  private AutoCompleteTextView startACTV, destACTV;
+
+  //app logic
+  private SharedPreferences sharedPreferences;
+  private ArrayAdapter<String> adapterSuggestions;
+  private List<String> suggestionsList;
+  private Set<String> suggestionsSet;
+  private String startAddress;
+  private String destAddress;
+
+  //google maps api
+  private GoogleMap mMap;
+  private Marker carMarker;
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -57,12 +69,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     mapFragment.getMapAsync(this);
 
     findPathB = findViewById(R.id.findPB);
-    startEd = findViewById(R.id.startET);
-    destEd = findViewById(R.id.destET);
+    startACTV = findViewById(R.id.startACTV);
+    destACTV = findViewById(R.id.destACTV);
     distanceTV = findViewById(R.id.distanceTV);
     timeTV = findViewById(R.id.timeTV);
-    distanceIV = findViewById(R.id.distanceIV);
-    timeIV = findViewById(R.id.timeIV);
 
     findPathB.setOnClickListener(new OnClickListener() {
       @Override
@@ -87,6 +97,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       askPermission();
     }
     mMap.setMyLocationEnabled(true);
+
+    suggestionsList = new ArrayList<String>();
+    sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+    adapterSuggestions = new ArrayAdapter<String>(this,
+        android.R.layout.simple_dropdown_item_1line, suggestionsList);
+
+    startACTV.setAdapter(adapterSuggestions);
+    destACTV.setAdapter(adapterSuggestions);
+
+    loadSuggestionsFromPrefs();
+  }
+
+  private void loadSuggestionsFromPrefs() {
+    suggestionsSet = sharedPreferences.getStringSet("locations", new HashSet<String>());
+
+    //this method is called each time a new location is added
+    suggestionsList.addAll(suggestionsSet);
+
+    //notifyDataSetChanged() doesn't work to update the list of suggested words
+    // adapterSuggestions.notifyDataSetChanged();
+
   }
 
   private boolean checkPermission() {
@@ -110,11 +141,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       return;
     }
 
-    String start = startEd.getText().toString();
-    String dest = destEd.getText().toString();
+    startAddress = startACTV.getText().toString();
+    destAddress = destACTV.getText().toString();
     HashMap<String, String> parameters = new HashMap<>();
-    parameters.put("origin", start);
-    parameters.put("destination", dest);
+    parameters.put("origin", startAddress);
+    parameters.put("destination", destAddress);
+    //parameters.put("alternatives", "true");
 
     new PathProvider(this, parameters).start();
 
@@ -140,9 +172,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
           .width(10);
 
       if (i == 0) {
-        mMap.addMarker(new MarkerOptions()
+        carMarker = mMap.addMarker(new MarkerOptions()
             .position(r.getCoordinatesLatLng().get(0))
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+            .icon(BitmapDescriptorFactory
+                .fromResource(R.drawable.car)));
 
         distanceTV.setText(r.getDistanceKM() + " km");
         timeTV.setText(r.getTimeM() + " min");
@@ -157,27 +190,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    updateSuggestionsSet();
+
+  }
+
+  private void updateSuggestionsSet() {
+
+    if (!suggestionsSet.contains(startAddress) || !suggestionsSet.contains(destAddress)) {
+      //persist data
+      sharedPreferences.edit().remove("locations").commit();
+      suggestionsSet.add(startAddress);
+      suggestionsSet.add(destAddress);
+      sharedPreferences.edit().putStringSet("locations", suggestionsSet).commit();
+
+      //update the suggested list dynamically
+      if (!suggestionsList.contains(startAddress)) {
+        suggestionsList.add(startAddress);
+      }
+
+      if (!suggestionsList.contains(destAddress)) {
+        suggestionsList.add(destAddress);
+      }
+
+      adapterSuggestions = new ArrayAdapter<String>(this,
+          android.R.layout.simple_dropdown_item_1line, suggestionsList);
+
+      startACTV.setAdapter(adapterSuggestions);
+      destACTV.setAdapter(adapterSuggestions);
+    }
+
   }
 
 
   private boolean startAndDestinationSupplied() {
     boolean valid = true;
 
-    String start = startEd.getText().toString();
+    String start = startACTV.getText().toString();
     if (TextUtils.isEmpty(start)) {
-      startEd.setError("Required!");
+      startACTV.setError("Required!");
       valid = false;
     } else {
-      startEd.setError(null);
+      startACTV.setError(null);
     }
 
-    String dest = destEd.getText().toString();
+    String dest = destACTV.getText().toString();
     if (TextUtils.isEmpty(dest)) {
-      destEd.setError("Required!");
+      destACTV.setError("Required!");
       valid = false;
     } else {
       //if error is null the error mesage will be cleared
-      destEd.setError(null);
+      destACTV.setError(null);
     }
 
     return valid;

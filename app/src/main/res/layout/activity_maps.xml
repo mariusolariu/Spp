@@ -10,21 +10,21 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <EditText
-      android:id="@+id/startET"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:hint="@string/hintStart"
-      android:maxLines="1"
-      />
 
-    <EditText
-      android:id="@+id/destET"
+    <AutoCompleteTextView
+      android:id="@+id/startACTV"
+      android:layout_width="match_parent"
+      android:lines="1"
+      android:layout_height="wrap_content"
+      android:hint="@string/hintStart"/>
+
+    <AutoCompleteTextView
+      android:id="@+id/destACTV"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:hint="@string/hintEnd"
-      android:maxLines="1"
-      />
+      android:lines="1"
+      android:hint="@string/hintEnd"/>
+
 
     <LinearLayout
       android:layout_width="match_parent"

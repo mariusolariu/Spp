@@ -7,6 +7,7 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.CoreMatchers.allOf;
 
 import android.app.Activity;
 import android.support.test.rule.ActivityTestRule;
@@ -29,9 +30,9 @@ public class SmartwaysTestUi {
 
   @Test
   public void testAtoBLocationResult(){
-    onView(withId(R.id.startET)).perform(typeText("Sibot"));
-    onView(withId(R.id.destET)).perform(typeText("Balomiru"));
-    onView(withId(R.id.findPB)).perform(click());
+    onView(withId(R.id.startACTV)).perform(typeText("Sibot"));
+    onView(withId(R.id.destACTV)).perform(typeText("Balomiru"));
+    onView(withId(R.id.distanceTV)).check(matches(allOf(withText("5.3 km"), isDisplayed())));
   }
 
   @Test
