@@ -1,6 +1,5 @@
 package mm.spp.path_agorithm;
 
-import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import com.google.android.gms.maps.model.LatLng;
 import java.io.BufferedReader;
@@ -38,7 +37,7 @@ public class PathProvider {
   }
 
   public void start() {
-    mapsActivity.findingPathStarted(); //launch progress bar
+    mapsActivity.findingRoutesStarted(); //launch progress bar
 
     String requestUrl = null;
 
@@ -79,7 +78,7 @@ public class PathProvider {
 
     @Override
     protected void onPreExecute() {
-      mapsActivity.findingPathStarted();
+      mapsActivity.findingRoutesStarted();
     }
 
     @Override
@@ -173,7 +172,7 @@ public class PathProvider {
           routes.add(routeDto);
         }
 
-        mapsActivity.pathFound(routes);
+        mapsActivity.routesFound(routes);
       } catch (JSONException e) {
         e.printStackTrace();
       }

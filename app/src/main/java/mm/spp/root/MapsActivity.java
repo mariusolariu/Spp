@@ -17,7 +17,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.Switch;
 import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -25,7 +27,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
@@ -37,14 +38,17 @@ import mm.spp.R;
 import mm.spp.path_agorithm.PathProvider;
 import mm.spp.path_agorithm.Route;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+    OnCheckedChangeListener {
 
   private final int REQ_PERMISSION_CODE = 1;
   //project: rock-nebula-190414
+
   //ui elements
   private Button findPathB;
   private TextView distanceTV, timeTV;
   private AutoCompleteTextView startACTV, destACTV;
+  private Switch spSwitch;
 
   //app logic
   private SharedPreferences sharedPreferences;
@@ -53,10 +57,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   private Set<String> suggestionsSet;
   private String startAddress;
   private String destAddress;
+  private boolean shortestPath; // the api returns the fastest path when this isn't set, however sometimes shortest == fastest
 
   //google maps api
   private GoogleMap mMap;
-  private Marker carMarker;
 
 
   @Override
@@ -73,6 +77,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     destACTV = findViewById(R.id.destACTV);
     distanceTV = findViewById(R.id.distanceTV);
     timeTV = findViewById(R.id.timeTV);
+    spSwitch = findViewById(R.id.spSwitch);
 
     findPathB.setOnClickListener(new OnClickListener() {
       @Override
@@ -86,6 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       }
     });
 
+    spSwitch.setOnCheckedChangeListener(this);
   }
 
 
@@ -146,40 +152,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     HashMap<String, String> parameters = new HashMap<>();
     parameters.put("origin", startAddress);
     parameters.put("destination", destAddress);
-    //parameters.put("alternatives", "true");
+    parameters.put("alternatives", "true");
 
     new PathProvider(this, parameters).start();
 
   }
 
-  public void findingPathStarted() {
+  public void findingRoutesStarted() {
 //    progressDialog = ProgressDialog.show(this, "Please wait.",
 //        "Finding direction..!", true);
   }
 
-  public void pathFound(List<Route> routes) {
+  public void routesFound(List<Route> routes) {
     // FIXME: 12/30/2017 : It doesn't work to dismiss the dialog...
     //progressDialog.dismiss();
 
     mMap.clear();
 
-    for (int i = 0; i < routes.size(); i++) {
+    int mainRouteIndex = getMainRouteIndex(routes);
+    //choose the index of the route to be drawn with blue
+
+    int routesSize = routes.size() - 1;
+    for (int i = routesSize; i >= 0; i--) {
+      if (i == mainRouteIndex) {
+        continue; //main route polyine must be drawn the last
+      }
+
       Route r = routes.get(i);
-      mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(r.getOriginLatLng(), 17));
+
       PolylineOptions polylineOptions = new PolylineOptions()
           .geodesic(true)
-          .color(Color.BLUE)
+          .color(Color.GRAY)
           .width(10);
-
-      if (i == 0) {
-        carMarker = mMap.addMarker(new MarkerOptions()
-            .position(r.getCoordinatesLatLng().get(0))
-            .icon(BitmapDescriptorFactory
-                .fromResource(R.drawable.car)));
-
-        distanceTV.setText(r.getDistanceKM() + " km");
-        timeTV.setText(r.getTimeM() + " min");
-      }
 
       for (LatLng p : r.getCoordinatesLatLng()
           ) {
@@ -190,8 +194,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    drawMainRoute(routes.get(mainRouteIndex));
+
     updateSuggestionsSet();
 
+  }
+
+  private void drawMainRoute(Route r) {
+    //add start marker -  icon : a car
+    mMap.addMarker(new MarkerOptions()
+        .position(r.getOriginLatLng())
+        .icon(BitmapDescriptorFactory
+            .fromResource(R.drawable.car)));
+
+    distanceTV.setText(r.getDistanceKM() + " km");
+    timeTV.setText(r.getTimeM() + " min");
+    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(r.getOriginLatLng(), 17));
+
+    PolylineOptions polylineOptions = new PolylineOptions()
+        .geodesic(true)
+        .color(Color.BLUE)
+        .width(10);
+
+    for (LatLng p : r.getCoordinatesLatLng()
+        ) {
+      polylineOptions.add(p);
+    }
+
+    mMap.addPolyline(polylineOptions);
+
+    //add finish marker - icon: a flag
+    mMap.addMarker(new MarkerOptions()
+        .position(r.getDestinationLatLng())
+        .icon(BitmapDescriptorFactory
+            .fromResource(R.drawable.stop_flag)));
+
+  }
+
+  /**
+   * @return - the index of the route to be drawn with blue (i.e if the fastest is desired then
+   * index = 0;
+   */
+  private int getMainRouteIndex(List<Route> routes) {
+    int index = 0;
+
+    if (!shortestPath) {
+      return index;
+    }
+
+    float minDistance = routes.get(0).getDistanceKM();
+
+    int size = routes.size();
+    for (int i = 1; i < size; i++) {
+      if (routes.get(i).getDistanceKM() < minDistance) {
+        index = i;
+      }
+    }
+
+    return index;
   }
 
   private void updateSuggestionsSet() {
@@ -243,5 +303,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     return valid;
+  }
+
+  @Override
+  public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+
+    if (isChecked) {
+      shortestPath = true;
+    } else {
+      shortestPath = false;
+    }
   }
 }

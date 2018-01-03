@@ -14,24 +14,29 @@
     <AutoCompleteTextView
       android:id="@+id/startACTV"
       android:layout_width="match_parent"
-      android:lines="1"
       android:layout_height="wrap_content"
-      android:hint="@string/hintStart"/>
+      android:hint="@string/hintStart"
+      android:lines="1"/>
 
     <AutoCompleteTextView
       android:id="@+id/destACTV"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:lines="1"
-      android:hint="@string/hintEnd"/>
+      android:hint="@string/hintEnd"
+      android:lines="1"/>
 
+    <Switch
+      android:id="@+id/spSwitch"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginLeft="5dp"
+      android:text="Shortest Path: "/>
 
     <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:orientation="horizontal"
       >
-
       <Button
         android:id="@+id/findPB"
         android:layout_width="0dp"
@@ -39,6 +44,7 @@
         android:layout_weight="2"
         android:text="Find Path"
         android:textAllCaps="false"/>
+
 
       <ImageView
         android:id="@+id/distanceIV"
