@@ -35,11 +35,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import mm.spp.R;
+import mm.spp.path_agorithm.Observer;
 import mm.spp.path_agorithm.PathProvider;
 import mm.spp.path_agorithm.Route;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
-    OnCheckedChangeListener {
+    OnCheckedChangeListener, Observer {
 
   private final int REQ_PERMISSION_CODE = 1;
   //project: rock-nebula-190414

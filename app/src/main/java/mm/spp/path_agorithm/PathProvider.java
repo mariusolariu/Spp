@@ -28,16 +28,16 @@ public class PathProvider {
 
   private static final String DIRECTION_URL = "https://maps.googleapis.com/maps/api/directions/json?";
   private static final String GOOGLE_DIRECTIONS_KEY = "AIzaSyBO2nU0Y8fSAG2uo8E4Glzgad6ccl60DWw";
-  private MapsActivity mapsActivity;
+  private Observer observer;
   private HashMap<String, String> parameters;
 
-  public PathProvider(MapsActivity mapsActivity, HashMap<String, String> parameters) {
-    this.mapsActivity = mapsActivity;
+  public PathProvider(MapsActivity observer, HashMap<String, String> parameters) {
+    this.observer = observer;
     this.parameters = parameters;
   }
 
   public void start() {
-    mapsActivity.findingRoutesStarted(); //launch progress bar
+    observer.findingRoutesStarted(); //launch progress bar
 
     String requestUrl = null;
 
@@ -78,7 +78,7 @@ public class PathProvider {
 
     @Override
     protected void onPreExecute() {
-      mapsActivity.findingRoutesStarted();
+      observer.findingRoutesStarted();
     }
 
     @Override
@@ -172,7 +172,7 @@ public class PathProvider {
           routes.add(routeDto);
         }
 
-        mapsActivity.routesFound(routes);
+        observer.routesFound(routes);
       } catch (JSONException e) {
         e.printStackTrace();
       }
