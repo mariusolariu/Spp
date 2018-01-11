@@ -11,6 +11,7 @@ import android.os.Bundle;
 
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
@@ -29,6 +30,14 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import java.security.KeyPairGenerator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +48,7 @@ import mm.spp.path_agorithm.PathProvider;
 import mm.spp.path_agorithm.Route;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
-    OnCheckedChangeListener {
+    OnCheckedChangeListener{
 
   private final int REQ_PERMISSION_CODE = 1;
   //project: rock-nebula-190414
@@ -91,7 +100,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       }
     });
 
-    spSwitch.setOnCheckedChangeListener(this);
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("Mure");
+    DatabaseReference a=myRef.child("locations");
+    //a.setValue("ssss");
+
+    System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+
+    a.addValueEventListener(new ValueEventListener() {
+      @Override
+      public void onDataChange(DataSnapshot dataSnapshot) {
+        // This method is called once with the initial value and again
+        // whenever data at this location is updated.
+
+          String value = dataSnapshot.getValue(String.class);
+          System.out.println("Value is: " + value);
+      }
+
+      @Override
+      public void onCancelled(DatabaseError error) {
+        // Failed to read value
+        System.out.println("failed"+error.toException());
+      }
+    });
   }
 
 
